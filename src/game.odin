@@ -51,22 +51,11 @@ draw :: proc(gm: ^Game_Manager) {
             world_position := world_to_grid(Vec2{position.x, position.y})
             rl.DrawRectangle(i32(world_position[0]), i32(world_position[1]), 32, 32, rl.RED)
         }
-        for &enemy in gm.enimies {
-            enemy_position := get_component(enemy, PositionComponent)
-            follow_path := get_component(enemy, EnemyPathComponent)
-            rotation := get_component(enemy, RotationComponent)
-            if enemy_position != nil {
-                rl.DrawTexturePro(
-                    gm.textures[1], 
-                    {0,0,32,32},
-                    {enemy_position.x + 16,enemy_position.y + 16, 32, 32},
-                    {16,16},
-                    rotation^,
-                    rl.WHITE
-                )
-            }
+        draw_enimies(gm)
+        
+        when ODIN_DEBUG {
+            //draw_debug_grid()
         }
-        //draw_debug_grid()
         rl.EndDrawing()
 }
 

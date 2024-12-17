@@ -45,7 +45,7 @@ Enemy_Right_Path :: []Vec2 {
         {21,11},
         {21,13},
         {16,13},
-        {15,5},
+        {16,5},
         {12,5},
         {12,7}
 }
@@ -122,6 +122,24 @@ create_enemy :: proc(gm: ^Game_Manager, start_at: EnemyStartPosition) {
     add_component(enemy_entity, position)
     add_component(enemy_entity, rotation)
     append(&gm.enimies, enemy_entity)
+}
+
+draw_enimies :: proc(gm: ^Game_Manager) {
+    for &enemy in gm.enimies {
+        enemy_position := get_component(enemy, PositionComponent)
+        follow_path := get_component(enemy, EnemyPathComponent)
+        rotation := get_component(enemy, RotationComponent)
+        if enemy_position != nil {
+            rl.DrawTexturePro(
+                gm.textures[1], 
+                {0,0,32,32},
+                {enemy_position.x + 16,enemy_position.y + 16, 32, 32},
+                {16,16},
+                rotation^,
+                rl.WHITE
+            )
+        }
+    }
 }
 
 cleanup_enemies :: proc(gm: ^Game_Manager) {
