@@ -26,6 +26,21 @@ make_entity_manager :: proc() ->^Entity_Manager {
     return manager
 }
 
+destroy_entity_manager :: proc(em: ^Entity_Manager) {
+    for entity in em.entities {
+        for component in entity.components {
+              if enemy_path, ok := component.data.([]Vec2); ok {
+                    delete(enemy_path)
+                }
+            free(component)
+        }
+        delete(entity.components)
+        free(entity)
+    }
+    delete(em.entities)
+    free(em)
+}
+
 create_entitiy :: proc(
     em: ^Entity_Manager,
     type: EntityType
@@ -39,11 +54,28 @@ create_entitiy :: proc(
     return entity
 }
 
-add_component :: proc(entity: ^Entity, component:ComponentData) -> ^Component {
+destroy_entity :: proc(em: ^Entity_Manager, entity: ^Entity) {
+    for &e, i in em.entities {
+        if e == entity {
+            for component in entity.components {
+                if enemy_path, ok := component.data.([]Vec2); ok {
+                    delete(enemy_path)
+                }
+                free(component)
+            }
+            if entity.components != nil {
+                delete(entity.components)
+            }
+            free(entity)
+        }
+    }
+}
+
+
+add_component :: proc(entity: ^Entity, component:ComponentData) {
     comp := new(Component)
     comp.data = component
     append(&entity.components, comp)
-    return comp
 }
 
 get_component :: proc(entity: ^Entity, $T: typeid) -> (^T) {
