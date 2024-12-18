@@ -4,6 +4,8 @@ import rl "vendor:raylib"
 import ln "core:math/linalg"
 import "core:math"
 import "core:slice"
+import "core:math/rand"
+
 EnemyStartPosition :: enum {
     Left,
     Top,
@@ -100,12 +102,18 @@ rotate_enemy :: proc(enemy: ^Entity, direction: Vec2) {
     }
 }
 
-create_enemy :: proc(gm: ^Game_Manager, start_at: EnemyStartPosition) {
+
+create_enemy :: proc(gm: ^Game_Manager) {
     enemy := EnemyComponent{health = 100, speed = 25}
     position := PositionComponent{0, 0}
     rotation: RotationComponent = 0
     enemy_path: []Vec2
-    switch start_at {
+    direction: EnemyStartPosition = .Left
+    if gm.wave.number >= 6 {
+    direction = rand.choice_enum(EnemyStartPosition)
+    }
+
+    switch direction {
         case EnemyStartPosition.Left:
             enemy_path = slice.clone(Enemy_Left_Path)
         case EnemyStartPosition.Top:
@@ -121,11 +129,12 @@ create_enemy :: proc(gm: ^Game_Manager, start_at: EnemyStartPosition) {
     add_component(enemy_entity, enemy)
     add_component(enemy_entity, position)
     add_component(enemy_entity, rotation)
-    append(&gm.enimies, enemy_entity)
+    gm.wave.time_since_last_spawn = 0
+    append(&gm.wave.enimies, enemy_entity)
 }
 
 draw_enimies :: proc(gm: ^Game_Manager) {
-    for &enemy in gm.enimies {
+    for &enemy in gm.wave.enimies {
         enemy_position := get_component(enemy, PositionComponent)
         follow_path := get_component(enemy, EnemyPathComponent)
         rotation := get_component(enemy, RotationComponent)
@@ -143,5 +152,5 @@ draw_enimies :: proc(gm: ^Game_Manager) {
 }
 
 cleanup_enemies :: proc(gm: ^Game_Manager) {
-    delete(gm.enimies)
+    delete(gm.wave.enimies)
 }

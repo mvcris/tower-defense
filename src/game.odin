@@ -17,17 +17,10 @@ Game_Manager :: struct {
     delta_time: f32,
     textures: [2]rl.Texture,
     tiled_maps: [1]^TiledMap,
-    enimies: [dynamic]^Entity
+    wave: Wave
 }
 
-input :: proc(gm: ^Game_Manager) {
-    if rl.IsKeyPressed(.SPACE) {
-        create_enemy(gm, .Left)
-        create_enemy(gm, .Top)
-        create_enemy(gm, .Right)
-        create_enemy(gm, .Bottom)
-    }
-}
+input :: proc(gm: ^Game_Manager) {}
 
 update :: proc(gm: ^Game_Manager) {
     player := get_entity(gm.ecs, 1)
@@ -36,7 +29,8 @@ update :: proc(gm: ^Game_Manager) {
         position.x = world_to_grid(rl.GetMousePosition())[0]
         position.y =  world_to_grid(rl.GetMousePosition())[1]
     }
-    for &enemy in gm.enimies {
+    wave_update(gm)
+    for &enemy in gm.wave.enimies {
         enemy_update(enemy, gm.delta_time)
     }
 }
@@ -95,6 +89,7 @@ main :: proc() {
     gm.textures[0] = tiled_texture
     gm.textures[1] = enemy_texture
     gm.tiled_maps[0] = &tiled_map
+    gm.wave = create_wave(8,30,15,1.3)
     defer {
         destroy_entity_manager(ecs)
         cleanup_enemies(&gm)
