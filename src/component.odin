@@ -22,13 +22,23 @@ EnemyComponent :: struct {
     speed: f32
 }
 
+BuildComponent :: struct {
+    cost: f32,
+    damage: f32,
+    range: f32,
+    fire_rate: f32,
+    last_fire: f32,
+    type: BuildType
+}
+
 ComponentData :: union {
     PositionComponent,
     CollisionComponent,
     PlayerComponent,
     EnemyComponent,
     EnemyPathComponent,
-    RotationComponent
+    RotationComponent,
+    BuildComponent
 }
 
 Component :: struct {

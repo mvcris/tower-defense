@@ -12,41 +12,53 @@ import "core:mem"
 
 Vec2 :: [2]f32
 
-Game_Manager :: struct {
-    ecs: ^Entity_Manager,
+GameState :: enum {
+    MainMenu,
+    Pause,
+    PrepareWave,
+    InWave,
+    PrepareBuilds,
+}
+GameManager :: struct {
+    ecs: ^EntityManager,
     delta_time: f32,
-    textures: [2]rl.Texture,
+    textures: [6]rl.Texture,
     tiled_maps: [1]^TiledMap,
-    wave: Wave
+    wave: Wave,
+    state: GameState,
+    grid_placeable: Placeable,
+    builds_textures: [4]rl.Texture,
+    builds: [dynamic]^Entity,
+    selected_build: bool,
+    selected_build_type: BuildType,
+
 }
 
-input :: proc(gm: ^Game_Manager) {}
-
-update :: proc(gm: ^Game_Manager) {
-    player := get_entity(gm.ecs, 1)
-    position := get_component(player, PositionComponent)
-    if position != nil {
-        position.x = world_to_grid(rl.GetMousePosition())[0]
-        position.y =  world_to_grid(rl.GetMousePosition())[1]
+input :: proc(gm: ^GameManager) {
+    if gm.state == .MainMenu && rl.IsKeyPressed(.ENTER) {
+        gm.state = .PrepareBuilds
     }
+    if gm.state == .PrepareBuilds && rl.IsKeyPressed(.SPACE) {
+        gm.state = .PrepareWave
+    }
+    input_build(gm)
+}
+
+update :: proc(gm: ^GameManager) {
     wave_update(gm)
     for &enemy in gm.wave.enimies {
         enemy_update(enemy, gm.delta_time)
     }
 }
 
-draw :: proc(gm: ^Game_Manager) {
+draw :: proc(gm: ^GameManager) {
         rl.BeginDrawing()
-        rl.ClearBackground({10, 10, 10, 255})
+        rl.SetMouseCursor(.DEFAULT)
+        rl.ClearBackground({15, 15, 15, 255})
         render_tilemap(gm.tiled_maps[0], gm.textures[0])
-        player := get_entity(gm.ecs, 1)
-        position := get_component(player, PositionComponent)
-        if position != nil {
-            world_position := world_to_grid(Vec2{position.x, position.y})
-            rl.DrawRectangle(i32(world_position[0]), i32(world_position[1]), 32, 32, rl.RED)
-        }
+        draw_build(gm)
         draw_enimies(gm)
-        
+        draw_ui(gm)
         when ODIN_DEBUG {
             //draw_debug_grid()
         }
@@ -58,7 +70,6 @@ main :: proc() {
 		track: mem.Tracking_Allocator
 		mem.tracking_allocator_init(&track, context.allocator)
 		context.allocator = mem.tracking_allocator(&track)
-
 		defer {
 			if len(track.allocation_map) > 0 {
 				for _, entry in track.allocation_map {
@@ -76,23 +87,23 @@ main :: proc() {
     rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Tower Defense")
     rl.SetTargetFPS(60)
     ecs := make_entity_manager()
-    gm := Game_Manager{ecs = ecs, delta_time = 0}
-    player_component := PlayerComponent{health =  100, points =  0}
-    position_component := PositionComponent{0, 0}
-    player_entity := create_entitiy(ecs, EntityType.Player)
-    add_component(player_entity, player_component)
-    add_component(player_entity, position_component)
+    gm := GameManager{ecs = ecs, delta_time = 0, state = GameState.MainMenu}
     //TODO: Better textures loading and management
-    tiled_texture := rl.LoadTexture("assets/tileset.png")
-    enemy_texture := rl.LoadTexture("assets/enemy.png")
     tiled_map, ok := load_tilemap_file("assets/map.json")
-    gm.textures[0] = tiled_texture
-    gm.textures[1] = enemy_texture
+    gm.textures[0] = rl.LoadTexture("assets/tileset-export.png")
+    gm.textures[1] = rl.LoadTexture("assets/enemy.png")
+    gm.textures[2] = rl.LoadTexture("assets/build_01.png")
+    gm.textures[3] = rl.LoadTexture("assets/build_02.png")
+    gm.textures[4] = rl.LoadTexture("assets/build_03.png")
+    gm.textures[5] = rl.LoadTexture("assets/build_04.png")
     gm.tiled_maps[0] = &tiled_map
-    gm.wave = create_wave(8,30,15,1.3)
+    gm.wave = create_wave(1,30,10,1.4)
+    init_build(&gm)
     defer {
         destroy_entity_manager(ecs)
         cleanup_enemies(&gm)
+        cleanup_builds(&gm)
+        delete(gm.grid_placeable)
     }
     for !rl.WindowShouldClose() {
         gm.delta_time = rl.GetFrameTime()

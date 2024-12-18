@@ -6,6 +6,7 @@ EntityType :: enum {
     Player,
     Enemey,
     Projecttile,
+    Build
 }
 
 Entity :: struct {
@@ -14,19 +15,19 @@ Entity :: struct {
     components: [dynamic]^Component,
 }
 
-Entity_Manager :: struct {
+EntityManager :: struct {
     entities: [dynamic]^Entity,
     next_id: EntityId,
 }
 
-make_entity_manager :: proc() ->^Entity_Manager {
-    manager := new(Entity_Manager)
+make_entity_manager :: proc() ->^EntityManager {
+    manager := new(EntityManager)
     manager.entities = make([dynamic]^Entity, 0)
     manager.next_id = 1
     return manager
 }
 
-destroy_entity_manager :: proc(em: ^Entity_Manager) {
+destroy_entity_manager :: proc(em: ^EntityManager) {
     for entity in em.entities {
         for component in entity.components {
               if enemy_path, ok := component.data.([]Vec2); ok {
@@ -42,7 +43,7 @@ destroy_entity_manager :: proc(em: ^Entity_Manager) {
 }
 
 create_entitiy :: proc(
-    em: ^Entity_Manager,
+    em: ^EntityManager,
     type: EntityType
 ) ->^Entity {
     entity := new(Entity)
@@ -54,7 +55,7 @@ create_entitiy :: proc(
     return entity
 }
 
-destroy_entity :: proc(em: ^Entity_Manager, entity: ^Entity) {
+destroy_entity :: proc(em: ^EntityManager, entity: ^Entity) {
     for &e, i in em.entities {
         if e == entity {
             for component in entity.components {
@@ -87,7 +88,7 @@ get_component :: proc(entity: ^Entity, $T: typeid) -> (^T) {
     return nil
 }
 
-get_entity :: proc(em: ^Entity_Manager, id: EntityId) -> ^Entity {
+get_entity :: proc(em: ^EntityManager, id: EntityId) -> ^Entity {
     for &entity in em.entities {
         if entity.id == id {
             return entity

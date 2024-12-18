@@ -13,7 +13,7 @@ EnemyStartPosition :: enum {
     Bottom
 }
 
-Enemy_Left_Path :: []Vec2 {
+EnemyLeftPath :: []Vec2 {
         {0,6},
         {5,6},
         {5,3},
@@ -28,7 +28,7 @@ Enemy_Left_Path :: []Vec2 {
 }
 
 
-Enemy_Top_Path :: []Vec2 {
+EnemyTopPath :: []Vec2 {
         {17,0},
         {17,3},
         {19,3},
@@ -42,7 +42,7 @@ Enemy_Top_Path :: []Vec2 {
         {14,9},
 }
 
-Enemy_Right_Path :: []Vec2 {
+EnemyRightPath :: []Vec2 {
         {24,11},
         {21,11},
         {21,13},
@@ -52,7 +52,7 @@ Enemy_Right_Path :: []Vec2 {
         {12,7}
 }
 
-Enemy_Bottom_Path :: []Vec2 {
+EnemyBottomPath :: []Vec2 {
         {5,14},
         {5,12},
         {1,12},
@@ -103,7 +103,7 @@ rotate_enemy :: proc(enemy: ^Entity, direction: Vec2) {
 }
 
 
-create_enemy :: proc(gm: ^Game_Manager) {
+create_enemy :: proc(gm: ^GameManager) {
     enemy := EnemyComponent{health = 100, speed = 25}
     position := PositionComponent{0, 0}
     rotation: RotationComponent = 0
@@ -115,13 +115,13 @@ create_enemy :: proc(gm: ^Game_Manager) {
 
     switch direction {
         case EnemyStartPosition.Left:
-            enemy_path = slice.clone(Enemy_Left_Path)
+            enemy_path = slice.clone(EnemyLeftPath)
         case EnemyStartPosition.Top:
-             enemy_path = slice.clone(Enemy_Top_Path)
+             enemy_path = slice.clone(EnemyTopPath)
         case EnemyStartPosition.Right:
-             enemy_path = slice.clone(Enemy_Right_Path)
+             enemy_path = slice.clone(EnemyRightPath)
         case EnemyStartPosition.Bottom:
-            enemy_path = slice.clone(Enemy_Bottom_Path)
+            enemy_path = slice.clone(EnemyBottomPath)
     }
     enemy_entity := create_entitiy(gm.ecs, EntityType.Enemey)
     position = grid_to_world(enemy_path[0])
@@ -133,7 +133,7 @@ create_enemy :: proc(gm: ^Game_Manager) {
     append(&gm.wave.enimies, enemy_entity)
 }
 
-draw_enimies :: proc(gm: ^Game_Manager) {
+draw_enimies :: proc(gm: ^GameManager) {
     for &enemy in gm.wave.enimies {
         enemy_position := get_component(enemy, PositionComponent)
         follow_path := get_component(enemy, EnemyPathComponent)
@@ -151,6 +151,6 @@ draw_enimies :: proc(gm: ^Game_Manager) {
     }
 }
 
-cleanup_enemies :: proc(gm: ^Game_Manager) {
+cleanup_enemies :: proc(gm: ^GameManager) {
     delete(gm.wave.enimies)
 }
