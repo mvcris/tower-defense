@@ -68,27 +68,24 @@ create_build :: proc(
     gm: ^GameManager
 ) -> bool{
     cost, damage, range, fire_rate, last_fire: f32
+    //TODO: Implement build stats based on build type 
     switch build_type {
         case .Basic:
-            cost = 10
-            damage = 10
             range = 10
             fire_rate = 10
             last_fire = 10
         case .Medium:
-            cost = 20
+
             damage = 20
             range = 20
             fire_rate = 20
             last_fire = 20
         case .Heavy:
-            cost = 30
             damage = 30
             range = 30
             fire_rate = 30
             last_fire = 30
         case .Super:
-            cost = 40
             damage = 40
             range = 40
             fire_rate = 40
@@ -100,7 +97,6 @@ create_build :: proc(
         return false
     }
     build := BuildComponent{
-        cost = cost,
         damage = damage,
         range = range,
         fire_rate = fire_rate,

@@ -109,6 +109,7 @@ create_enemy :: proc(gm: ^GameManager) {
     rotation: RotationComponent = 0
     enemy_path: []Vec2
     direction: EnemyStartPosition = .Left
+    //TODO: Implement spawn direction based on wave number (L, R, T, B)
     if gm.wave.number >= 6 {
     direction = rand.choice_enum(EnemyStartPosition)
     }
@@ -125,6 +126,17 @@ create_enemy :: proc(gm: ^GameManager) {
     }
     enemy_entity := create_entitiy(gm.ecs, EntityType.Enemey)
     position = grid_to_world(enemy_path[0])
+    switch direction {
+        case EnemyStartPosition.Left:
+            position.x -= 16
+        case EnemyStartPosition.Top:
+             position.y -= 16
+        case EnemyStartPosition.Right:
+             position.x += 16
+        case EnemyStartPosition.Bottom:
+           position.y += 16
+    }
+    
     add_component(enemy_entity, enemy_path)
     add_component(enemy_entity, enemy)
     add_component(enemy_entity, position)

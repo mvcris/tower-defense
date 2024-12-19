@@ -23,7 +23,6 @@ EnemyComponent :: struct {
 }
 
 BuildComponent :: struct {
-    cost: f32,
     damage: f32,
     range: f32,
     fire_rate: f32,
