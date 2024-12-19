@@ -31,6 +31,13 @@ BuildComponent :: struct {
     type: BuildType
 }
 
+ProjectileComponent :: struct {
+    damage: f32,
+    speed: f32,
+    target: Vec2,
+    origin: Vec2
+}
+
 ComponentData :: union {
     PositionComponent,
     CollisionComponent,
@@ -38,7 +45,8 @@ ComponentData :: union {
     EnemyComponent,
     EnemyPathComponent,
     RotationComponent,
-    BuildComponent
+    BuildComponent,
+    ProjectileComponent
 }
 
 Component :: struct {

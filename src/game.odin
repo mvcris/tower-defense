@@ -6,9 +6,11 @@ import  ln "core:math/linalg"
 import "core:math"
 import "core:mem"
 
+
  WINDOW_WIDTH :: 800
  WINDOW_HEIGHT :: 640
  GRID_SIZE :: 32
+ STARS :: 350
 
 Vec2 :: [2]f32
 
@@ -22,15 +24,18 @@ GameState :: enum {
 GameManager :: struct {
     ecs: ^EntityManager,
     delta_time: f32,
-    textures: [6]rl.Texture,
+    textures: [7]rl.Texture,
     tiled_maps: [1]^TiledMap,
     wave: Wave,
     state: GameState,
     grid_placeable: Placeable,
     builds_textures: [4]rl.Texture,
+    builds_price: BuildPrice,
     builds: [dynamic]^Entity,
     selected_build: bool,
     selected_build_type: BuildType,
+    stars: [STARS]Stars,
+    resource: int
 
 }
 
@@ -55,12 +60,21 @@ draw :: proc(gm: ^GameManager) {
         rl.BeginDrawing()
         rl.SetMouseCursor(.DEFAULT)
         rl.ClearBackground({15, 15, 15, 255})
+        draw_stars(gm)
         render_tilemap(gm.tiled_maps[0], gm.textures[0])
         draw_build(gm)
         draw_enimies(gm)
         draw_ui(gm)
         when ODIN_DEBUG {
             //draw_debug_grid()
+        }
+        core_position := grid_to_world({11,8}) 
+        rl.DrawTextureEx(gm.textures[6], core_position, 0, 1, rl.WHITE)
+        if gm.state == .MainMenu {
+            rl.DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, {0,0,0,150})
+            position := grid_to_world(Vec2{3, 8})
+            rl.DrawTextPro(rl.GetFontDefault(), "PRESS ENTER TO START", position, {0,-10}, 0,48,5,rl.BLACK)
+            rl.DrawTextPro(rl.GetFontDefault(), "PRESS ENTER TO START", {position.x - 5, position.y - 5}, {0,-10}, 0,48,5,rl.WHITE)
         }
         rl.EndDrawing()
 }
@@ -87,17 +101,20 @@ main :: proc() {
     rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Tower Defense")
     rl.SetTargetFPS(60)
     ecs := make_entity_manager()
+   
     gm := GameManager{ecs = ecs, delta_time = 0, state = GameState.MainMenu}
-    //TODO: Better textures loading and management
-    tiled_map, ok := load_tilemap_file("assets/map.json")
+    tiled_map, ok := load_tilemap_file("resources/map2.json")
     gm.textures[0] = rl.LoadTexture("assets/tileset-export.png")
     gm.textures[1] = rl.LoadTexture("assets/enemy.png")
     gm.textures[2] = rl.LoadTexture("assets/build_01.png")
     gm.textures[3] = rl.LoadTexture("assets/build_02.png")
     gm.textures[4] = rl.LoadTexture("assets/build_03.png")
     gm.textures[5] = rl.LoadTexture("assets/build_04.png")
+    gm.textures[6] = rl.LoadTexture("assets/core.png")
     gm.tiled_maps[0] = &tiled_map
-    gm.wave = create_wave(1,30,10,1.4)
+    gm.resource = 30
+    create_stars(&gm)
+    gm.wave = Wave{number = 0}
     init_build(&gm)
     defer {
         destroy_entity_manager(ecs)

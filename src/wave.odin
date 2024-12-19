@@ -7,21 +7,32 @@ Wave :: struct {
     total_time: f32,
     enimies: [dynamic]^Entity,
     enemies_per_wave: int,
+    enimies_spawned: int,
     spawn_interval: f32,
     time_since_last_spawn: f32,
     growth_factor: f32,
 }
 
-
 wave_update :: proc(gm: ^GameManager) {
-    if gm.state != GameState.InWave {
+    if gm.state == .PrepareWave {
+        gm.wave = create_wave(gm.wave.number + 1, 30, 10, 1.5)
+        gm.state = .InWave
         return
     }
-    gm.wave.time_since_last_spawn += gm.delta_time
-    if gm.wave.time_since_last_spawn >= gm.wave.spawn_interval && len(gm.wave.enimies) < gm.wave.enemies_per_wave {
-        create_enemy(gm)
-        gm.wave.time_since_last_spawn = 0
+    if gm.state == .InWave {
+        if gm.wave.enimies_spawned >= gm.wave.enemies_per_wave && len(gm.wave.enimies) == 0 {
+            gm.state = .PrepareBuilds
+            return
+        }
+        gm.wave.time_since_last_spawn += gm.delta_time
+        if gm.wave.time_since_last_spawn >= gm.wave.spawn_interval && gm.wave.enimies_spawned < gm.wave.enemies_per_wave {
+            create_enemy(gm)
+            gm.wave.enimies_spawned += 1
+            gm.wave.time_since_last_spawn = 0
+        }
     }
+
+    
 }
 
 create_wave :: proc(
@@ -42,5 +53,6 @@ create_wave :: proc(
         spawn_interval = spawn_interval,
         time_since_last_spawn = 0,
         growth_factor = growth_factor,
+        enimies_spawned = 0
     }
 }

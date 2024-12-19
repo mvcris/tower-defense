@@ -10,6 +10,8 @@ BuildType :: enum {
     Super
 }
 
+BuildPrice :: map[BuildType]int
+
 load_build_textures :: proc(gm: ^GameManager) {
     gm.builds_textures[0] = rl.LoadTexture("./assets/build_01.png")
     gm.builds_textures[1] = rl.LoadTexture("./assets/build_02.png")
@@ -19,8 +21,13 @@ load_build_textures :: proc(gm: ^GameManager) {
 
 input_build :: proc(gm: ^GameManager) {
     if gm.state == .PrepareBuilds && rl.IsMouseButtonPressed(.LEFT) && gm.selected_build {
-        create_build(gm.selected_build_type, rl.GetMousePosition(), gm)
-        gm.selected_build = false
+        build_price := gm.builds_price[gm.selected_build_type]
+        if gm.resource >= build_price {
+            if create_build(gm.selected_build_type, rl.GetMousePosition(), gm) {
+                gm.selected_build = false
+                gm.resource -= build_price
+            } 
+        }
     }
 }
 
@@ -38,6 +45,7 @@ draw_build :: proc(gm: ^GameManager) {
             can_place := gm.grid_placeable[position]
             color: rl.Color = can_place ? {255,255,255,100} : {255,0,0,100}
             rl.DrawTexturePro(gm.builds_textures[gm.selected_build_type], {0,0,32,32}, {position.x, position.y, 32, 32}, {0,0}, 0, color)
+            rl.DrawRectangleLines(i32(position.x), i32(position.y), 32, 32, can_place ? rl.WHITE : rl.RED)
         }
     }
 }
@@ -45,6 +53,12 @@ draw_build :: proc(gm: ^GameManager) {
 init_build :: proc(gm: ^GameManager) {
     placeable := create_placeable()
     gm.grid_placeable = placeable
+    build_price := make(map[BuildType]int)
+    build_price[.Basic] = 10
+    build_price[.Medium] = 35
+    build_price[.Heavy] = 60
+    build_price[.Super] = 85
+    gm.builds_price = build_price
     load_build_textures(gm)
 }
 
@@ -52,7 +66,7 @@ create_build :: proc(
     build_type: BuildType,
     position: Vec2,
     gm: ^GameManager
-) {
+) -> bool{
     cost, damage, range, fire_rate, last_fire: f32
     switch build_type {
         case .Basic:
@@ -83,8 +97,7 @@ create_build :: proc(
     world_position := world_to_grid(position)
     can_place := gm.grid_placeable[world_position]
     if !can_place {
-        fmt.println("can't place")
-        return
+        return false
     }
     build := BuildComponent{
         cost = cost,
@@ -100,8 +113,10 @@ create_build :: proc(
     add_component(entity, build)
     add_component(entity, position)
     append(&gm.builds, entity)
+    return true
 }
 
 cleanup_builds :: proc(gm: ^GameManager) {
     delete(gm.builds)
+    delete(gm.builds_price)
 }
