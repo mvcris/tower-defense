@@ -27,13 +27,15 @@ BuildComponent :: struct {
     range: f32,
     fire_rate: f32,
     last_fire: f32,
-    type: BuildType
+    type: BuildType,
+    speed: f32,
+    resource: int
 }
 
 ProjectileComponent :: struct {
     damage: f32,
     speed: f32,
-    target: Vec2,
+    target: ^Vec2,
     origin: Vec2
 }
 

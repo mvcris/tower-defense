@@ -5,7 +5,7 @@ EntityId :: distinct u64
 EntityType :: enum {
     Player,
     Enemey,
-    Projecttile,
+    Projectile,
     Build
 }
 

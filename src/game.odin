@@ -30,7 +30,7 @@ GameManager :: struct {
     state: GameState,
     grid_placeable: Placeable,
     builds_textures: [4]rl.Texture,
-    builds_price: BuildPrice,
+    build_config: BuildsConfig,
     builds: [dynamic]^Entity,
     selected_build: bool,
     selected_build_type: BuildType,
@@ -54,6 +54,7 @@ update :: proc(gm: ^GameManager) {
     for &enemy in gm.wave.enimies {
         enemy_update(enemy, gm.delta_time)
     }
+    update_build(gm)
 }
 
 draw :: proc(gm: ^GameManager) {
@@ -64,6 +65,7 @@ draw :: proc(gm: ^GameManager) {
         render_tilemap(gm.tiled_maps[0], gm.textures[0])
         draw_build(gm)
         draw_enimies(gm)
+        draw_projectile(gm)
         draw_ui(gm)
         when ODIN_DEBUG {
             //draw_debug_grid()
@@ -112,7 +114,7 @@ main :: proc() {
     gm.textures[5] = rl.LoadTexture("assets/build_04.png")
     gm.textures[6] = rl.LoadTexture("assets/core.png")
     gm.tiled_maps[0] = &tiled_map
-    gm.resource = 30
+    gm.resource = 300
     create_stars(&gm)
     gm.wave = Wave{number = 0}
     init_build(&gm)
@@ -120,6 +122,7 @@ main :: proc() {
         destroy_entity_manager(ecs)
         cleanup_enemies(&gm)
         cleanup_builds(&gm)
+        cleanup_projectiles(&gm)
         delete(gm.grid_placeable)
     }
     for !rl.WindowShouldClose() {

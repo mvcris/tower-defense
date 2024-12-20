@@ -28,11 +28,11 @@ draw_ui_build_store :: proc(gm: ^GameManager) {
     initial_build_store_position := grid_to_world({1,17})
     build_offset: f32 = 0
     for i in 0..<4 {
-        have_money := gm.resource >= gm.builds_price[BuildType(i)]
+        have_money := gm.resource >= gm.build_config[BuildType(i)].resource
         color := gm.state == .InWave || !have_money ? rl.GRAY : rl.WHITE
         rl.DrawTexturePro(gm.builds_textures[i], {0,0,32,32},{initial_build_store_position.x + build_offset, initial_build_store_position.y, 32, 32}, {0,0}, 0, color)
         rl.DrawRectangleLinesEx({initial_build_store_position.x + build_offset, initial_build_store_position.y, 32, 32}, 1, color)
-        price := fmt.caprintf("$%v", gm.builds_price[BuildType(i)])
+        price := fmt.caprintf("$%v", gm.build_config[BuildType(i)].resource)
         rl.DrawTextEx(rl.GetFontDefault(), price, {initial_build_store_position.x + build_offset + 4, initial_build_store_position.y + 34}, 16, 2, color)
         delete(price)
         if !have_money {

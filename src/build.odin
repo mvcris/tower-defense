@@ -2,6 +2,7 @@ package game
 
 import "core:fmt"
 import rl "vendor:raylib"
+import ln "core:math/linalg"
 
 BuildType :: enum {
     Basic,
@@ -10,7 +11,7 @@ BuildType :: enum {
     Super
 }
 
-BuildPrice :: map[BuildType]int
+BuildsConfig :: map[BuildType]BuildComponent
 
 load_build_textures :: proc(gm: ^GameManager) {
     gm.builds_textures[0] = rl.LoadTexture("./assets/build_01.png")
@@ -19,9 +20,35 @@ load_build_textures :: proc(gm: ^GameManager) {
     gm.builds_textures[3] = rl.LoadTexture("./assets/build_04.png")
 }
 
+update_build :: proc(gm: ^GameManager) {
+    if gm.state == .InWave {
+        for &build in gm.builds {
+            build_component := get_component(build, BuildComponent)
+            position := get_component(build, PositionComponent)
+            build_component.last_fire += gm.delta_time
+            if build_component.last_fire >= build_component.fire_rate {
+                build_component.last_fire = 0
+                nearest_enemy: ^Entity = nil
+                nearest_distance: f32 = build_component.range
+                for &enemy in gm.wave.enimies {
+                    enemy_position := get_component(enemy, PositionComponent)
+                    distance := ln.distance(position^, enemy_position^)
+                    if  distance <= build_component.range && (nearest_enemy == nil || distance < nearest_distance) {
+                        nearest_enemy = enemy
+                        nearest_distance = distance
+                    }
+                }
+                if nearest_enemy != nil {
+                    create_projectile(build_component.damage, build_component.speed, get_component(nearest_enemy, PositionComponent), position^, gm)
+                }
+            }
+        }
+    }
+}
+
 input_build :: proc(gm: ^GameManager) {
     if gm.state == .PrepareBuilds && rl.IsMouseButtonPressed(.LEFT) && gm.selected_build {
-        build_price := gm.builds_price[gm.selected_build_type]
+        build_price := gm.build_config[gm.selected_build_type].resource
         if gm.resource >= build_price {
             if create_build(gm.selected_build_type, rl.GetMousePosition(), gm) {
                 gm.selected_build = false
@@ -46,6 +73,7 @@ draw_build :: proc(gm: ^GameManager) {
             color: rl.Color = can_place ? {255,255,255,100} : {255,0,0,100}
             rl.DrawTexturePro(gm.builds_textures[gm.selected_build_type], {0,0,32,32}, {position.x, position.y, 32, 32}, {0,0}, 0, color)
             rl.DrawRectangleLines(i32(position.x), i32(position.y), 32, 32, can_place ? rl.WHITE : rl.RED)
+            rl.DrawCircle(i32(position.x + 16), i32(position.y + 16),gm.build_config[gm.selected_build_type].range, {255,255,255,50})
         }
     }
 }
@@ -53,12 +81,12 @@ draw_build :: proc(gm: ^GameManager) {
 init_build :: proc(gm: ^GameManager) {
     placeable := create_placeable()
     gm.grid_placeable = placeable
-    build_price := make(map[BuildType]int)
-    build_price[.Basic] = 10
-    build_price[.Medium] = 35
-    build_price[.Heavy] = 60
-    build_price[.Super] = 85
-    gm.builds_price = build_price
+    build_config := make(BuildsConfig, 4)
+    build_config[.Basic] = BuildComponent{1, 80, 2.5, 0, .Basic, 150, 10}
+    build_config[.Medium] = BuildComponent{2, 135, 1.8, 0, .Medium, 250, 14}
+    build_config[.Heavy] = BuildComponent{3, 160, 1.4, 0, .Heavy, 320, 25}
+    build_config[.Super] = BuildComponent{4, 220, 1, 0, .Super, 400, 35}
+    gm.build_config = build_config
     load_build_textures(gm)
 }
 
@@ -67,42 +95,12 @@ create_build :: proc(
     position: Vec2,
     gm: ^GameManager
 ) -> bool{
-    cost, damage, range, fire_rate, last_fire: f32
-    //TODO: Implement build stats based on build type 
-    switch build_type {
-        case .Basic:
-            range = 10
-            fire_rate = 10
-            last_fire = 10
-        case .Medium:
-
-            damage = 20
-            range = 20
-            fire_rate = 20
-            last_fire = 20
-        case .Heavy:
-            damage = 30
-            range = 30
-            fire_rate = 30
-            last_fire = 30
-        case .Super:
-            damage = 40
-            range = 40
-            fire_rate = 40
-            last_fire = 40
-    }
     world_position := world_to_grid(position)
     can_place := gm.grid_placeable[world_position]
     if !can_place {
         return false
     }
-    build := BuildComponent{
-        damage = damage,
-        range = range,
-        fire_rate = fire_rate,
-        last_fire = last_fire,
-        type = build_type
-    }
+    build := gm.build_config[build_type]
     position := PositionComponent{world_position[0], world_position[1]}
     entity := create_entitiy(gm.ecs, EntityType.Build)
     gm.grid_placeable[world_position] = false
@@ -114,5 +112,5 @@ create_build :: proc(
 
 cleanup_builds :: proc(gm: ^GameManager) {
     delete(gm.builds)
-    delete(gm.builds_price)
+    delete(gm.build_config)
 }
