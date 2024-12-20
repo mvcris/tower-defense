@@ -39,7 +39,7 @@ update_build :: proc(gm: ^GameManager) {
                     }
                 }
                 if nearest_enemy != nil {
-                    create_projectile(build_component.damage, build_component.speed, get_component(nearest_enemy, PositionComponent), position^, gm)
+                    create_projectile(build_component.damage, build_component.speed, nearest_enemy, position^, gm)
                 }
             }
         }
@@ -82,10 +82,10 @@ init_build :: proc(gm: ^GameManager) {
     placeable := create_placeable()
     gm.grid_placeable = placeable
     build_config := make(BuildsConfig, 4)
-    build_config[.Basic] = BuildComponent{1, 80, 2.5, 0, .Basic, 150, 10}
-    build_config[.Medium] = BuildComponent{2, 135, 1.8, 0, .Medium, 250, 14}
-    build_config[.Heavy] = BuildComponent{3, 160, 1.4, 0, .Heavy, 320, 25}
-    build_config[.Super] = BuildComponent{4, 220, 1, 0, .Super, 400, 35}
+    build_config[.Basic] = BuildComponent{1, 50, 2.5, 0, .Basic, 150, 15}
+    build_config[.Medium] = BuildComponent{1, 75, 1.8, 0, .Medium, 210, 30}
+    build_config[.Heavy] = BuildComponent{1, 115, 1.4, 0, .Heavy, 290, 60}
+    build_config[.Super] = BuildComponent{1, 140, 1, 0, .Super, 330, 115}
     gm.build_config = build_config
     load_build_textures(gm)
 }

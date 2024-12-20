@@ -1,13 +1,12 @@
 package game
 
 import "core:math"
-
 Wave :: struct {
     number: f32,
     total_time: f32,
     enimies: [dynamic]^Entity,
-    enemies_per_wave: int,
-    enimies_spawned: int,
+    enemies_per_wave: u64,
+    enimies_spawned: u64,
     spawn_interval: f32,
     time_since_last_spawn: f32,
     growth_factor: f32,
@@ -16,7 +15,7 @@ Wave :: struct {
 
 wave_update :: proc(gm: ^GameManager) {
     if gm.state == .PrepareWave {
-        gm.wave = create_wave(gm.wave.number + 1, 30, 10, 1.5)
+        gm.wave = create_wave(gm.wave.number + 1, 30, 10, 1.8)
         gm.state = .InWave
         return
     }
@@ -37,9 +36,7 @@ wave_update :: proc(gm: ^GameManager) {
 }
 
 end_wave :: proc(gm: ^GameManager) {
-    free(&gm.wave.enimies)
-    free(&gm.wave.projectiles)
-    gm.state = .PrepareWave
+    gm.state = .PrepareBuilds
 }
 
 create_wave :: proc(
@@ -48,7 +45,7 @@ create_wave :: proc(
     base_enimies: int,
     growth_factor: f32
 ) ->Wave {
-    total_enimies := int(f32(base_enimies) * math.pow(growth_factor, f32(wave_number - 1)))
+    total_enimies := u64(f32(base_enimies) * math.pow(growth_factor, f32(wave_number - 1)))
     total_wave_time := math.round(base_wave_time * math.pow(growth_factor, f32(wave_number - 1)))
     enimies_per_second: = f32(total_enimies) / total_wave_time
     spawn_interval := 1 / enimies_per_second * math.pow(0.85, f32(wave_number - 1))

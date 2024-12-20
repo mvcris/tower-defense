@@ -4,6 +4,8 @@ PositionComponent :: [2]f32
 
 CollisionComponent :: struct {
     width, height : f32,
+    offset: [2]f32,
+    position: Vec2,
     tag: string
 }
 
@@ -11,9 +13,8 @@ RotationComponent :: f32
 
 EnemyPathComponent :: [][2]f32
 
-PlayerComponent :: struct {
+CoreComponent :: struct {
     health: i32,
-    points: int,
 }
 
 EnemyComponent :: struct {
@@ -35,19 +36,19 @@ BuildComponent :: struct {
 ProjectileComponent :: struct {
     damage: f32,
     speed: f32,
-    target: ^Vec2,
-    origin: Vec2
+    target: ^Entity,
+    origin: Vec2,
 }
 
 ComponentData :: union {
     PositionComponent,
     CollisionComponent,
-    PlayerComponent,
     EnemyComponent,
     EnemyPathComponent,
     RotationComponent,
     BuildComponent,
-    ProjectileComponent
+    ProjectileComponent,
+    CoreComponent
 }
 
 Component :: struct {

@@ -61,10 +61,19 @@ EnemyBottomPath :: []Vec2 {
 }
 
 
-enemy_update :: proc (enemy: ^Entity, delta_time :f32) {
+enemy_update :: proc (enemy: ^Entity, gm: ^GameManager) {
+    delta_time := gm.delta_time
     enemy_position := get_component(enemy, PositionComponent)
     follow_path := get_component(enemy, EnemyPathComponent)
     enemy_component := get_component(enemy, EnemyComponent)
+    collision_componet := get_component(enemy, CollisionComponent)
+    if enemy_component != nil {
+        if enemy_component.health <= 0 {
+            delete_enemy(gm, enemy)
+            gm.resource += 3
+            return
+        }
+    }
     if enemy_position != nil {
         if enemy_component.current_path < len(follow_path) - 1 {
             next_point_world_position := grid_to_world(Vec2{follow_path[enemy_component.current_path + 1].x, follow_path[enemy_component.current_path + 1].y})
@@ -75,27 +84,60 @@ enemy_update :: proc (enemy: ^Entity, delta_time :f32) {
             if ln.vector_length(direction) < 1 {
                 enemy_component.current_path += 1
             }
-            rotate_enemy(enemy, normalized_direc)
             enemy_position^ += normalized_direc * enemy_component.speed * delta_time
+            collision_componet.position = {enemy_position.x, enemy_position.y}
+            rotate_enemy(enemy, normalized_direc)
         }
-        
+    }
+    core_collision := get_component(gm.core, CollisionComponent)
+    core_component := get_component(gm.core, CoreComponent)
+    collision_core_rec: rl.Rectangle = {collision_componet.position.x, collision_componet.position.y, collision_componet.width, collision_componet.height}
+    collision_enemy_rec: rl.Rectangle = {core_collision.position.x, core_collision.position.y, core_collision.width + 6, core_collision.height + 6}
+    if rl.CheckCollisionRecs(collision_core_rec, collision_enemy_rec) {
+        core_component.health -= 5
+        delete_enemy(gm, enemy)
+    }
+}
+
+delete_enemy :: proc(gm: ^GameManager, enemy: ^Entity) {
+    for &e, i in gm.wave.enimies {
+        if e == enemy {
+            ordered_remove(&gm.wave.enimies, i)
+            destroy_entity(gm.ecs, enemy)
+        }
     }
 }
 
 rotate_enemy :: proc(enemy: ^Entity, direction: Vec2) {
     rotation := get_component(enemy, RotationComponent)
+    collision := get_component(enemy, CollisionComponent)
+    original_width: f32 = 30
+    original_height: f32 = 15
     new_direction: f32
     if rotation == nil {
         return
     }
     if direction.x == 1 && direction.y == 0 {
         new_direction = 0
+        collision.width = original_width
+        collision.height = original_height
+        collision.position = {collision.position.x + collision.offset.x, collision.position.y + collision.offset.y}
     } else if direction.x == -1 && direction.y == 0 {
         new_direction = 180
+        collision.width = original_width
+        collision.height = original_height
+        collision.position = {collision.position.x + collision.offset.x, collision.position.y + collision.offset.y}
     } else if direction.x == 0 && direction.y == 1 {
-        new_direction = 90
+        new_direction = 90  
+        collision.width = original_height
+        collision.height = original_width
+        collision.position = {collision.position.x + collision.offset.y, collision.position.y + collision.offset.x}
+
     } else if direction.x == 0 && direction.y == -1 {
         new_direction = 270
+        collision.width = original_height
+        collision.height = original_width
+        collision.position = {collision.position.x + collision.offset.y, collision.position.y + collision.offset.x}
     }
     if new_direction != rotation^ {
         rotation^ = new_direction
@@ -104,7 +146,7 @@ rotate_enemy :: proc(enemy: ^Entity, direction: Vec2) {
 
 
 create_enemy :: proc(gm: ^GameManager) {
-    enemy := EnemyComponent{health = 100, speed = 25}
+    enemy := EnemyComponent{health = 3, speed = 25}
     position := PositionComponent{0, 0}
     rotation: RotationComponent = 0
     enemy_path: []Vec2
@@ -113,6 +155,7 @@ create_enemy :: proc(gm: ^GameManager) {
     if gm.wave.number >= 6 {
     direction = rand.choice_enum(EnemyStartPosition)
     }
+    collision := CollisionComponent{30,15, {0,8}, {0,0}, "enemy"}
 
     switch direction {
         case EnemyStartPosition.Left:
@@ -141,6 +184,7 @@ create_enemy :: proc(gm: ^GameManager) {
     add_component(enemy_entity, enemy)
     add_component(enemy_entity, position)
     add_component(enemy_entity, rotation)
+    add_component(enemy_entity, collision)
     gm.wave.time_since_last_spawn = 0
     append(&gm.wave.enimies, enemy_entity)
 }
@@ -150,6 +194,7 @@ draw_enimies :: proc(gm: ^GameManager) {
         enemy_position := get_component(enemy, PositionComponent)
         follow_path := get_component(enemy, EnemyPathComponent)
         rotation := get_component(enemy, RotationComponent)
+        collision := get_component(enemy, CollisionComponent)
         if enemy_position != nil {
             rl.DrawTexturePro(
                 gm.textures[1], 
@@ -159,6 +204,9 @@ draw_enimies :: proc(gm: ^GameManager) {
                 rotation^,
                 rl.WHITE
             )
+            // rl.DrawRectangleLinesEx(
+            //     {collision.position.x, collision.position.y, collision.width, collision.height}, 1, rl.RED
+            // )
         }
     }
 }

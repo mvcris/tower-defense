@@ -57,10 +57,13 @@ draw_ui_build_store :: proc(gm: ^GameManager) {
 draw_ui_health :: proc(gm: ^GameManager) {
     rl.DrawTextPro(rl.GetFontDefault(), "WAVE", grid_to_world(Vec2{8, 15}), {0,-10}, 0,24,2,rl.WHITE)
     position := grid_to_world({12,17})
-    rl.DrawRectangleRec({position.x, position.y, 170, 32}, rl.RED)
-    rl.DrawTextPro(rl.GetFontDefault(), "100/100", {position.x + 10, position.y + 8}, {0,0}, 0,16,2,rl.WHITE)
-    
-
+    health_component := get_component(gm.core, CoreComponent)
+    health := fmt.caprintf("%v/100", health_component.health)
+    core_health_size := (health_component.health * 170) / 100
+    rl.DrawRectangleRec({position.x, position.y, 170, 32}, {79, 31, 31, 255})
+    rl.DrawRectangleRec({position.x, position.y, f32(core_health_size), 32}, rl.RED)
+    rl.DrawTextPro(rl.GetFontDefault(), health, {position.x + 10, position.y + 8}, {0,0}, 0,16,2,rl.WHITE)
+    delete(health)
 }
 
 draw_ui_wave :: proc(gm: ^GameManager) {

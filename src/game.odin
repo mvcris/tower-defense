@@ -35,8 +35,8 @@ GameManager :: struct {
     selected_build: bool,
     selected_build_type: BuildType,
     stars: [STARS]Stars,
-    resource: int
-
+    resource: int,
+    core: ^Entity
 }
 
 input :: proc(gm: ^GameManager) {
@@ -50,11 +50,14 @@ input :: proc(gm: ^GameManager) {
 }
 
 update :: proc(gm: ^GameManager) {
+    core_update(gm)
     wave_update(gm)
     for &enemy in gm.wave.enimies {
-        enemy_update(enemy, gm.delta_time)
+        enemy_update(enemy, gm)
     }
     update_build(gm)
+    update_projectile(gm)
+
 }
 
 draw :: proc(gm: ^GameManager) {
@@ -67,6 +70,7 @@ draw :: proc(gm: ^GameManager) {
         draw_enimies(gm)
         draw_projectile(gm)
         draw_ui(gm)
+        draw_core(gm)
         when ODIN_DEBUG {
             //draw_debug_grid()
         }
@@ -114,7 +118,8 @@ main :: proc() {
     gm.textures[5] = rl.LoadTexture("assets/build_04.png")
     gm.textures[6] = rl.LoadTexture("assets/core.png")
     gm.tiled_maps[0] = &tiled_map
-    gm.resource = 300
+    gm.resource = 50
+    create_core(&gm)
     create_stars(&gm)
     gm.wave = Wave{number = 0}
     init_build(&gm)

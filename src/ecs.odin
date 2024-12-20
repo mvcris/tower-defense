@@ -6,7 +6,8 @@ EntityType :: enum {
     Player,
     Enemey,
     Projectile,
-    Build
+    Build,
+    Core
 }
 
 Entity :: struct {
@@ -67,6 +68,7 @@ destroy_entity :: proc(em: ^EntityManager, entity: ^Entity) {
             if entity.components != nil {
                 delete(entity.components)
             }
+            ordered_remove(&em.entities, i)
             free(entity)
         }
     }
@@ -80,7 +82,13 @@ add_component :: proc(entity: ^Entity, component:ComponentData) {
 }
 
 get_component :: proc(entity: ^Entity, $T: typeid) -> (^T) {
-    for &component in entity.components {
+    if entity == nil {
+        return nil
+    }
+    for &component, idx in entity.components {
+        if component.data == nil {
+            continue
+        }
         if v, ok := component.data.(T); ok {
             return cast(^T)&component.data
         }
