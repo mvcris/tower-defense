@@ -57,7 +57,7 @@ update :: proc(gm: ^GameManager) {
     }
     update_build(gm)
     update_projectile(gm)
-
+    update_particles(gm)
 }
 
 draw :: proc(gm: ^GameManager) {
@@ -71,6 +71,7 @@ draw :: proc(gm: ^GameManager) {
         draw_projectile(gm)
         draw_ui(gm)
         draw_core(gm)
+        draw_particles(gm)
         when ODIN_DEBUG {
             //draw_debug_grid()
         }

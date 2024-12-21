@@ -10,7 +10,8 @@ Wave :: struct {
     spawn_interval: f32,
     time_since_last_spawn: f32,
     growth_factor: f32,
-    projectiles: [dynamic]^Entity
+    projectiles: [dynamic]^Entity,
+    particles: [dynamic]^Particles
 }
 
 wave_update :: proc(gm: ^GameManager) {
@@ -31,8 +32,6 @@ wave_update :: proc(gm: ^GameManager) {
             gm.wave.time_since_last_spawn = 0
         }
     }
-
-    
 }
 
 end_wave :: proc(gm: ^GameManager) {

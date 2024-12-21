@@ -27,7 +27,6 @@ update_build :: proc(gm: ^GameManager) {
             position := get_component(build, PositionComponent)
             build_component.last_fire += gm.delta_time
             if build_component.last_fire >= build_component.fire_rate {
-                build_component.last_fire = 0
                 nearest_enemy: ^Entity = nil
                 nearest_distance: f32 = build_component.range
                 for &enemy in gm.wave.enimies {
@@ -40,6 +39,7 @@ update_build :: proc(gm: ^GameManager) {
                 }
                 if nearest_enemy != nil {
                     create_projectile(build_component.damage, build_component.speed, nearest_enemy, position^, gm)
+                    build_component.last_fire = 0
                 }
             }
         }

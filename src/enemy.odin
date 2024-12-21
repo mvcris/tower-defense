@@ -5,6 +5,7 @@ import ln "core:math/linalg"
 import "core:math"
 import "core:slice"
 import "core:math/rand"
+import "core:fmt"
 
 EnemyStartPosition :: enum {
     Left,
@@ -69,6 +70,10 @@ enemy_update :: proc (enemy: ^Entity, gm: ^GameManager) {
     collision_componet := get_component(enemy, CollisionComponent)
     if enemy_component != nil {
         if enemy_component.health <= 0 {
+            for i in 0..<50 {
+                particle := create_particle({enemy_position.x + 16, enemy_position.y + 16})
+                append(&gm.wave.particles, particle)
+            }
             delete_enemy(gm, enemy)
             gm.resource += 3
             return
@@ -151,10 +156,25 @@ create_enemy :: proc(gm: ^GameManager) {
     rotation: RotationComponent = 0
     enemy_path: []Vec2
     direction: EnemyStartPosition = .Left
-    //TODO: Implement spawn direction based on wave number (L, R, T, B)
-    if gm.wave.number >= 6 {
-    direction = rand.choice_enum(EnemyStartPosition)
+
+    direction = EnemyStartPosition.Left
+
+    if gm.wave.number >= 2 {
+        rand := rand.int31_max(2)
+        fmt.println(rand)
+        direction = EnemyStartPosition(rand)
     }
+    if gm.wave.number >= 4 {
+        rand := rand.int31_max(3)
+        fmt.println(rand)
+        direction = EnemyStartPosition(rand)
+    }
+    if gm.wave.number >= 6 {
+        rand := rand.int31_max(4)
+        fmt.println(rand)
+        direction = EnemyStartPosition(rand)
+    }
+
     collision := CollisionComponent{30,15, {0,8}, {0,0}, "enemy"}
 
     switch direction {
