@@ -9,6 +9,16 @@ CollisionComponent :: struct {
     tag: string
 }
 
+AnimatorComponent :: struct {
+    current_frame: i32,
+    frame_count: i32,
+    frame_width: i32,
+    frame_height: i32,
+    frame_speed: f32,
+    last_frame: f32,
+    triggered: bool,
+}
+
 RotationComponent :: f32
 
 EnemyPathComponent :: [][2]f32
@@ -48,7 +58,8 @@ ComponentData :: union {
     RotationComponent,
     BuildComponent,
     ProjectileComponent,
-    CoreComponent
+    CoreComponent,
+    AnimatorComponent
 }
 
 Component :: struct {

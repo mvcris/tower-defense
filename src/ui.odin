@@ -20,7 +20,9 @@ draw_ui :: proc(gm: ^GameManager) {
         }
         if (current_time - last_blink) < BLINK_TIME_ON {
             rl.DrawTextPro(rl.GetFontDefault(), "PRESS SPACE TO START NEXT WAVE", grid_to_world(Vec2{6, 19}), {0,-10}, 0,14,5,rl.WHITE)
-        }    }
+        }    
+    }
+    draw_arrows(gm)
 }
 
 draw_ui_build_store :: proc(gm: ^GameManager) {
@@ -79,4 +81,27 @@ draw_ui_resources :: proc(gm: ^GameManager) {
     position := grid_to_world(Vec2{19, 17})
     rl.DrawTextPro(rl.GetFontDefault(), resource, {position.x + 10, position.y}, {-32,0}, 0,32,1,rl.WHITE)
     delete(resource)
+}
+
+draw_arrows :: proc(gm: ^GameManager) {
+    if gm.state != .PrepareBuilds {
+        return
+    }
+    position_left := grid_to_world(Vec2{0, 6})
+    position_top := grid_to_world(Vec2{17, 0})
+    position_right := grid_to_world(Vec2{24, 11})
+    position_bottom := grid_to_world(Vec2{5, 14})
+    if gm.wave.number >= 0 {
+        rl.DrawTextureEx(gm.textures[7], position_left, 0, 1, rl.WHITE)
+    } 
+    if gm.wave.number >= 1 {
+        rl.DrawTexturePro(gm.textures[7], {0,0,32,32}, {position_top.x + 32,position_top.y, 32, 32}, {0,0}, 90, rl.WHITE)
+    }
+    if gm.wave.number >= 3 {
+        rl.DrawTexturePro(gm.textures[7], {0,0,32,32}, {position_right.x+32,position_right.y+32, 32, 32}, {0,0}, 180, rl.WHITE)
+    }
+    if gm.wave.number >= 5 {
+        rl.DrawTexturePro(gm.textures[7], {0,0,32,32}, {position_bottom.x,position_bottom.y+32, 32, 32}, {0,0}, 270, rl.WHITE)
+    }
+
 }

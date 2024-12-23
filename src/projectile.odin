@@ -32,11 +32,11 @@ update_projectile :: proc(gm: ^GameManager) {
             destroy_projectile(gm, projectile, idx)
             continue
         }
-        target_position := get_component(target, PositionComponent)
+        target_position := get_component(target, CollisionComponent)
         if rl.CheckCollisionCircleRec(
             rl.Vector2{position^.x, position^.y},
             5,
-            rl.Rectangle{target_position^.x, target_position^.y, 32, 32}
+            rl.Rectangle{target_position.position.x  + target_position.offset.x, target_position.position.y + target_position.offset.y, target_position.width, target_position.height}
         ) {
             destroy_projectile(gm, projectile, idx)
             enemy := get_component(target, EnemyComponent)
@@ -45,7 +45,7 @@ update_projectile :: proc(gm: ^GameManager) {
             }
             continue
         }
-        raw_dir := target_position^ - position^
+        raw_dir := target_position.position - position^
         raw_dir.x += 16
         raw_dir.y += 16
         direction := ln.normalize(raw_dir)

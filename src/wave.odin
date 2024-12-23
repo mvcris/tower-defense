@@ -11,7 +11,7 @@ Wave :: struct {
     time_since_last_spawn: f32,
     growth_factor: f32,
     projectiles: [dynamic]^Entity,
-    particles: [dynamic]^Particles
+    particles: [dynamic]^Particle
 }
 
 wave_update :: proc(gm: ^GameManager) {

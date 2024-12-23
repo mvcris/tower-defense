@@ -7,10 +7,10 @@ import "core:math"
 import "core:mem"
 
 
- WINDOW_WIDTH :: 800
- WINDOW_HEIGHT :: 640
- GRID_SIZE :: 32
- STARS :: 350
+WINDOW_WIDTH :: 800
+WINDOW_HEIGHT :: 640
+GRID_SIZE :: 32
+STARS :: 350
 
 Vec2 :: [2]f32
 
@@ -24,7 +24,7 @@ GameState :: enum {
 GameManager :: struct {
     ecs: ^EntityManager,
     delta_time: f32,
-    textures: [7]rl.Texture,
+    textures: [8]rl.Texture,
     tiled_maps: [1]^TiledMap,
     wave: Wave,
     state: GameState,
@@ -36,7 +36,8 @@ GameManager :: struct {
     selected_build_type: BuildType,
     stars: [STARS]Stars,
     resource: int,
-    core: ^Entity
+    core: ^Entity,
+    camera: rl.Camera2D
 }
 
 input :: proc(gm: ^GameManager) {
@@ -64,6 +65,7 @@ draw :: proc(gm: ^GameManager) {
         rl.BeginDrawing()
         rl.SetMouseCursor(.DEFAULT)
         rl.ClearBackground({15, 15, 15, 255})
+        rl.BeginMode2D(gm.camera)
         draw_stars(gm)
         render_tilemap(gm.tiled_maps[0], gm.textures[0])
         draw_build(gm)
@@ -83,7 +85,12 @@ draw :: proc(gm: ^GameManager) {
             rl.DrawTextPro(rl.GetFontDefault(), "PRESS ENTER TO START", position, {0,-10}, 0,48,5,rl.BLACK)
             rl.DrawTextPro(rl.GetFontDefault(), "PRESS ENTER TO START", {position.x - 5, position.y - 5}, {0,-10}, 0,48,5,rl.WHITE)
         }
+        rl.EndMode2D()
         rl.EndDrawing()
+}
+
+rand :: proc(min: f32, max: f32) -> f32 {
+    return min + ((max - min) * (f32(rl.GetRandomValue(0, 10000)) / 10000.0))
 }
 
 main :: proc() {
@@ -118,24 +125,31 @@ main :: proc() {
     gm.textures[4] = rl.LoadTexture("assets/build_03.png")
     gm.textures[5] = rl.LoadTexture("assets/build_04.png")
     gm.textures[6] = rl.LoadTexture("assets/core.png")
+    gm.textures[7] = rl.LoadTexture("assets/arrow.png")
     gm.tiled_maps[0] = &tiled_map
-    gm.resource = 50
+    gm.resource = 900
     create_core(&gm)
     create_stars(&gm)
     gm.wave = Wave{number = 0}
     init_build(&gm)
+    shake_timer: f32 = 0.0
+    shake_intensity: f32 = 0.0
     defer {
         destroy_entity_manager(ecs)
         cleanup_enemies(&gm)
         cleanup_builds(&gm)
         cleanup_projectiles(&gm)
+        cleanup_particles(&gm)
         delete(gm.grid_placeable)
     }
+    camera := rl.Camera2D{offset = {0,0}, rotation = 0, zoom = 1, target = {0,0}}
+    gm.camera = camera
     for !rl.WindowShouldClose() {
         gm.delta_time = rl.GetFrameTime()
         input(&gm)
         update(&gm)
         draw(&gm)
+        
     }
     rl.CloseWindow()
 }

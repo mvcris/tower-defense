@@ -14,10 +14,10 @@ BuildType :: enum {
 BuildsConfig :: map[BuildType]BuildComponent
 
 load_build_textures :: proc(gm: ^GameManager) {
-    gm.builds_textures[0] = rl.LoadTexture("./assets/build_01.png")
-    gm.builds_textures[1] = rl.LoadTexture("./assets/build_02.png")
-    gm.builds_textures[2] = rl.LoadTexture("./assets/build_03.png")
-    gm.builds_textures[3] = rl.LoadTexture("./assets/build_04.png")
+    gm.builds_textures[0] = rl.LoadTexture("./assets/build_01-Sheet.png")
+    gm.builds_textures[1] = rl.LoadTexture("./assets/build_02-Sheet.png")
+    gm.builds_textures[2] = rl.LoadTexture("./assets/build_03-Sheet.png")
+    gm.builds_textures[3] = rl.LoadTexture("./assets/build_04-Sheet.png")
 }
 
 update_build :: proc(gm: ^GameManager) {
@@ -40,6 +40,8 @@ update_build :: proc(gm: ^GameManager) {
                 if nearest_enemy != nil {
                     create_projectile(build_component.damage, build_component.speed, nearest_enemy, position^, gm)
                     build_component.last_fire = 0
+                    animator := get_component(build, AnimatorComponent)
+                    animator.triggered = true
                 }
             }
         }
@@ -63,7 +65,18 @@ draw_build :: proc(gm: ^GameManager) {
         position := get_component(build, PositionComponent)
         build_component := get_component(build, BuildComponent)
         if position != nil {
-            rl.DrawTextureEx(gm.builds_textures[build_component.type], position^, 0,1,rl.WHITE)
+            animator := get_component(build, AnimatorComponent)
+            if animator.triggered {
+                animator.last_frame += gm.delta_time
+                if animator.last_frame >= animator.frame_speed {
+                    animator.current_frame = (animator.current_frame + 1) % animator.frame_count
+                    animator.last_frame -= animator.frame_speed
+                    if animator.current_frame == 0 {
+                        animator.triggered = false
+                    }
+                }
+            }
+            rl.DrawTexturePro(gm.builds_textures[build_component.type], {f32(animator.current_frame * 32),0,32,32}, {f32(position.x), f32(position.y), 32, 32}, {0,0}, 0, rl.WHITE)
         }
     }
     if gm.state == .PrepareBuilds && gm.selected_build {
@@ -102,10 +115,12 @@ create_build :: proc(
     }
     build := gm.build_config[build_type]
     position := PositionComponent{world_position[0], world_position[1]}
+    animator := AnimatorComponent{0, 4, 32, 32, 0.15, 0, false}
     entity := create_entitiy(gm.ecs, EntityType.Build)
     gm.grid_placeable[world_position] = false
     add_component(entity, build)
     add_component(entity, position)
+    add_component(entity, animator)
     append(&gm.builds, entity)
     return true
 }

@@ -61,7 +61,6 @@ EnemyBottomPath :: []Vec2 {
         {10,9}
 }
 
-
 enemy_update :: proc (enemy: ^Entity, gm: ^GameManager) {
     delta_time := gm.delta_time
     enemy_position := get_component(enemy, PositionComponent)
@@ -70,10 +69,7 @@ enemy_update :: proc (enemy: ^Entity, gm: ^GameManager) {
     collision_componet := get_component(enemy, CollisionComponent)
     if enemy_component != nil {
         if enemy_component.health <= 0 {
-            for i in 0..<50 {
-                particle := create_particle({enemy_position.x + 16, enemy_position.y + 16})
-                append(&gm.wave.particles, particle)
-            }
+            create_particle(gm, {enemy_position.x + 16, enemy_position.y + 16}, 50)
             delete_enemy(gm, enemy)
             gm.resource += 3
             return
@@ -149,7 +145,6 @@ rotate_enemy :: proc(enemy: ^Entity, direction: Vec2) {
     }
 }
 
-
 create_enemy :: proc(gm: ^GameManager) {
     enemy := EnemyComponent{health = 3, speed = 25}
     position := PositionComponent{0, 0}
@@ -161,21 +156,18 @@ create_enemy :: proc(gm: ^GameManager) {
 
     if gm.wave.number >= 2 {
         rand := rand.int31_max(2)
-        fmt.println(rand)
         direction = EnemyStartPosition(rand)
     }
     if gm.wave.number >= 4 {
         rand := rand.int31_max(3)
-        fmt.println(rand)
         direction = EnemyStartPosition(rand)
     }
     if gm.wave.number >= 6 {
         rand := rand.int31_max(4)
-        fmt.println(rand)
         direction = EnemyStartPosition(rand)
     }
 
-    collision := CollisionComponent{30,15, {0,8}, {0,0}, "enemy"}
+    collision := CollisionComponent{28,14, {0,8}, {0,0}, "enemy"}
 
     switch direction {
         case EnemyStartPosition.Left:
